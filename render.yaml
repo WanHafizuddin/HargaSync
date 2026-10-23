@@ -1,0 +1,27 @@
+# Render Blueprint: Dashboard > New > Blueprint > pick this repository.
+# Free plan: the service sleeps after ~15 minutes idle and its disk is wiped on every
+# restart or deploy, so the demo data re-seeds and uploaded invoices are lost.
+# For data that survives, switch to a paid plan with a disk (see README, "Deploy on Render").
+services:
+  - type: web
+    name: hargasync
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python src/main.py
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: HARGASYNC_SECRET_KEY
+        generateValue: true
+      - key: HTTPS_ONLY
+        value: "1"
+      - key: DEMO_SEED
+        value: "1"
+      # Leave both empty to run the labelled Simulated AI; fill both to read invoices on RunPod.
+      - key: RUNPOD_API_KEY
+        sync: false
+      - key: RUNPOD_ENDPOINT_ID
+        sync: false

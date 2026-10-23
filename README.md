@@ -152,6 +152,26 @@ pip install -r requirements.txt
 python src/main.py               # http://localhost:8000
 ```
 
+### Option 3 — Deploy on Render
+
+`render.yaml` is a Render Blueprint for a Python web service.
+
+1. In the [Render dashboard](https://dashboard.render.com), choose **New → Blueprint** and connect this GitHub repository (Render asks for access to private repos).
+2. When asked for `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID`, fill both to read invoices on RunPod, or leave both empty to use the labelled Simulated AI.
+3. Click **Apply**. Render installs `requirements.txt`, runs `python src/main.py` on its `PORT`, generates `HARGASYNC_SECRET_KEY` and serves the app over HTTPS at `https://hargasync-<id>.onrender.com`.
+
+On the **free** plan the service sleeps after about 15 minutes idle (the first visit then takes up to a minute) and its disk is wiped on every restart or deploy: demo data re-seeds, uploaded invoices and approvals are lost. To keep data, use a paid plan with a disk by changing the service in `render.yaml`:
+
+```yaml
+    plan: starter
+    disk:
+      name: hargasync-data
+      mountPath: /var/data
+      sizeGB: 1
+```
+
+and adding the environment variable `HARGASYNC_DATA_DIR=/var/data`. Render also hosts the app only: the competition still requires Replit and RunPod use (see below).
+
 ### Demo accounts
 
 The first start seeds fictional data. Every demo account uses the password in `DEMO_PASSWORD` (default `demo1234`).
