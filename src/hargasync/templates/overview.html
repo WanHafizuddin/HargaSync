@@ -13,7 +13,30 @@
     {% endif %}
   </p>
 </div>
-{% block upload %}{% endblock %}
+<section class="panel upload">
+  <h2>Read a supplier invoice</h2>
+  {% if upload_error %}<p class="flash flash-error" role="alert">{{ upload_error }}</p>{% endif %}
+  {% if user.role in ("owner", "staff") %}
+  <form method="post" action="/invoices" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Invoice photo
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" capture="environment">
+    </label>
+    <div class="actions">
+      <button class="button" type="submit">Upload and read</button>
+      <button class="button button-quiet" type="submit" name="manual" value="1">Type the lines instead</button>
+    </div>
+    <p class="hint">
+      {% if ai_source == "fixture" %}Simulated AI is on: any photo returns the lines of the <a href="/sample-invoice">sample demo invoice</a>.
+      {% elif ai_source == "manual" %}AI reading is off, so you will type the lines yourself.
+      {% else %}A vision model on RunPod reads the photo. You check every line before any price changes.{% endif %}
+      JPEG, PNG or WebP up to 8 MB.
+    </p>
+  </form>
+  {% else %}
+  <p class="muted">Auditors can open invoices and history but cannot upload.</p>
+  {% endif %}
+</section>
 <section class="section">
   <h2>Recent invoices</h2>
   {% if invoices %}

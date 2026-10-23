@@ -7,9 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from .auth import (
-    CurrentUser,
     LoginRequired,
-    current_user,
     get_db,
     start_session,
     verify_csrf,
@@ -18,6 +16,7 @@ from .auth import (
 from .config import Settings, load_settings
 from .db import connect, init_db
 from .extraction import build_extractor
+from .routes_invoices import router as invoices_router
 from .seed import is_empty, seed_demo
 from .web import PACKAGE_DIR, redirect, render
 
@@ -77,28 +76,6 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
         request.session.clear()
         return redirect("/login")
 
-    @app.get("/")
-    def overview(
-        request: Request,
-        user: CurrentUser = Depends(current_user),
-        conn: sqlite3.Connection = Depends(get_db),
-    ):
-        pending = conn.execute(
-            "SELECT required_role, COUNT(*) AS n FROM price_proposals"
-            " WHERE shop_id = ? AND status = 'pending' GROUP BY required_role",
-            (user.shop_id,),
-        ).fetchall()
-        invoices = conn.execute(
-            "SELECT i.*, (SELECT COUNT(*) FROM invoice_lines l WHERE l.invoice_id = i.id) AS line_count"
-            " FROM invoices i WHERE i.shop_id = ? ORDER BY i.id DESC LIMIT 10",
-            (user.shop_id,),
-        ).fetchall()
-        context = {
-            "user": user,
-            "pending": {row["required_role"]: row["n"] for row in pending},
-            "invoices": invoices,
-            "ai_source": app.state.extractor.source,
-        }
-        return render(request, "overview.html", context)
+    app.include_router(invoices_router)
 
     return app

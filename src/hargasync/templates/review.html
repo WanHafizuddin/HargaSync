@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Invoice #{{ invoice.id }} | HargaSync{% endblock %}
+{% set status_labels = {"matched": "Matched", "confirmed": "Confirmed", "uncertain": "Check match", "unknown": "Not in catalogue", "skipped": "Skipped"} %}
+{% block content %}
+<div class="page-head">
+  <h1>Invoice #{{ invoice.id }}{% if invoice.supplier_name %} from {{ invoice.supplier_name }}{% endif %}</h1>
+  <p class="lede muted">
+    {% if invoice.invoice_date %}Dated {{ invoice.invoice_date }}. {% endif %}
+    Uploaded {{ invoice.created_at[:16]|replace("T", " ") }}.
+    {{ {"runpod": "Read by AI on RunPod.", "fixture": "Read by Simulated AI.", "manual": "Lines typed by hand."}[invoice.extraction_source] }}
+  </p>
+</div>
+
+{% if invoice.extraction_source == "fixture" %}
+  <p class="flash flash-warning">Simulated AI: these lines come from the demo fixture, not from reading this photo.</p>
+{% endif %}
+{% if invoice.extraction_error %}
+  <p class="flash flash-error">The AI could not read this invoice ({{ invoice.extraction_error }}). Type the lines from the photo below.</p>
+{% elif not lines %}
+  <p class="flash">Type the lines from the photo below, one product per row.</p>
+{% endif %}
+{% if invoice.status == "proposed" %}
+  <p class="flash flash-success">This invoice already has price proposals. <a href="/proposals">Open approvals</a>.</p>
+{% endif %}
+
+<div class="review {% if not invoice.image_path %}review-no-image{% endif %}">
+  {% if invoice.image_path %}
+  <figure class="review-photo">
+    <a href="/invoices/{{ invoice.id }}/image" target="_blank" rel="noopener">
+      <img src="/invoices/{{ invoice.id }}/image" alt="Supplier invoice photo #{{ invoice.id }}">
+    </a>
+    <figcaption class="hint">Compare each row with the photo. Open it full size to zoom.</figcaption>
+  </figure>
+  {% endif %}
+
+  <form class="review-form" method="post" action="/invoices/{{ invoice.id }}/lines">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="line_count" value="{{ lines|length }}">
+    <label class="supplier">Supplier
+      <input name="supplier_name" value="{{ invoice.supplier_name }}" maxlength="120" {% if not can_edit %}disabled{% endif %}>
+    </label>
+    <table class="table lines">
+      <thead>
+        <tr><th>Item on invoice</th><th>Unit</th><th class="num">Qty</th><th class="num">Unit cost (RM)</th><th>Catalogue product</th><th class="num">Per pack</th><th>Skip</th></tr>
+      </thead>
+      <tbody>
+      {% for line in lines %}
+        {% set i = loop.index %}
+        {% set chosen = line.match_status in ("matched", "confirmed", "skipped") %}
+        <tr class="line line-{{ line.match_status }}">
+          <td data-label="Item">
+            <input name="name_{{ i }}" value="{{ line.raw_name }}" maxlength="120" aria-label="Item {{ i }}" {% if not can_edit %}disabled{% endif %}>
+            <span class="status status-{{ line.match_status }}">{{ status_labels[line.match_status] }}</span>
+            {% if line.match_status == "uncertain" and line.product_id %}
+              <span class="hint">Looks like {{ line.product_name }}{% if line.raw_unit|lower != line.product_unit|lower %}, but the invoice unit is {{ line.raw_unit or "blank" }} and the catalogue sells per {{ line.product_unit }}: set how many are in one pack{% endif %}.</span>
+            {% elif line.match_status == "unknown" %}
+              <span class="hint">Not in your catalogue. Skip it, or have the owner add it in Catalogue first.</span>
+            {% endif %}
+          </td>
+          <td data-label="Unit"><input name="unit_{{ i }}" value="{{ line.raw_unit }}" maxlength="30" aria-label="Unit {{ i }}" {% if not can_edit %}disabled{% endif %}></td>
+          <td data-label="Qty" class="num"><input name="qty_{{ i }}" value="{{ line.qty }}" inputmode="decimal" aria-label="Quantity {{ i }}" {% if not can_edit %}disabled{% endif %}></td>
+          <td data-label="Unit cost (RM)" class="num"><input name="cost_{{ i }}" value="{{ '%.2f'|format(line.unit_cost_sen / 100) }}" inputmode="decimal" aria-label="Unit cost {{ i }}" {% if not can_edit %}disabled{% endif %}></td>
+          <td data-label="Catalogue product">
+            <select name="product_{{ i }}" aria-label="Catalogue product {{ i }}" {% if not can_edit %}disabled{% endif %}>
+              <option value="">Choose product</option>
+              {% if line.match_status == "uncertain" and line.product_id %}
+                <option value="{{ line.product_id }}">Suggested: {{ line.product_name }} ({{ line.product_unit }})</option>
+              {% endif %}
+              {% for p in products %}
+                <option value="{{ p.id }}" {% if chosen and p.id == line.product_id %}selected{% endif %}>{{ p.name_bm }} ({{ p.unit }})</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td data-label="Per pack" class="num"><input name="pack_{{ i }}" value="{{ line.pack_size }}" inputmode="numeric" aria-label="Units per pack {{ i }}" {% if not can_edit %}disabled{% endif %}></td>
+          <td data-label="Skip"><input type="checkbox" name="skip_{{ i }}" value="1" aria-label="Skip line {{ i }}" {% if line.match_status == "skipped" %}checked{% endif %} {% if not can_edit %}disabled{% endif %}></td>
+        </tr>
+      {% endfor %}
+      {% if can_edit %}
+        {% set i = lines|length + 1 %}
+        <tr class="line line-new">
+          <td data-label="New item"><input name="name_{{ i }}" placeholder="Add a line: item name" maxlength="120" aria-label="New item name"></td>
+          <td data-label="Unit"><input name="unit_{{ i }}" placeholder="pek" maxlength="30" aria-label="New item unit"></td>
+          <td data-label="Qty" class="num"><input name="qty_{{ i }}" inputmode="decimal" aria-label="New item quantity"></td>
+          <td data-label="Unit cost (RM)" class="num"><input name="cost_{{ i }}" inputmode="decimal" placeholder="0.00" aria-label="New item unit cost"></td>
+          <td data-label="Catalogue product">
+            <select name="product_{{ i }}" aria-label="New item catalogue product">
+              <option value="">Match automatically</option>
+              {% for p in products %}<option value="{{ p.id }}">{{ p.name_bm }} ({{ p.unit }})</option>{% endfor %}
+            </select>
+          </td>
+          <td data-label="Per pack" class="num"><input name="pack_{{ i }}" value="1" inputmode="numeric" aria-label="New item units per pack"></td>
+          <td></td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+    {% if can_edit %}
+    <div class="actions">
+      <button class="button button-quiet" type="submit" name="action" value="save">Save changes</button>
+      <button class="button" type="submit" name="action" value="confirm">Save and create price proposals</button>
+      <span class="hint">Proposals use your margin rules and any price ceiling. Nothing changes on the shelf until someone approves.</span>
+    </div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
