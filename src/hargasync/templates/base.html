@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}HargaSync{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if user %}
+  {% set path = request.url.path %}
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span>HargaSync</a>
+    <nav class="nav" aria-label="Main">
+      <a href="/" {% if path == "/" or path.startswith("/invoices") %}aria-current="page"{% endif %}>Invoices</a>
+      <a href="/proposals" {% if path.startswith("/proposals") %}aria-current="page"{% endif %}>Approvals</a>
+      <a href="/tags" {% if path.startswith("/tags") %}aria-current="page"{% endif %}>Print tags</a>
+      <a href="/catalogue" {% if path.startswith("/catalogue") %}aria-current="page"{% endif %}>Catalogue</a>
+      <a href="/activity" {% if path.startswith("/activity") %}aria-current="page"{% endif %}>Activity</a>
+    </nav>
+    <div class="who">
+      <span><strong>{{ user.display_name }}</strong> <span class="role role-{{ user.role }}">{{ user.role_label }}</span></span>
+      <span class="shop">{{ user.shop_name }}, {{ user.district }}</span>
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="link-button" type="submit">Log out</button>
+      </form>
+    </div>
+  </header>
+{% endif %}
+<main class="page {% block page_class %}{% endblock %}">
+  {% for f in flashes %}<p class="flash flash-{{ f.kind }}" role="status">{{ f.message }}</p>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

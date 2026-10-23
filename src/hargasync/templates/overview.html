@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Invoices | HargaSync{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ user.shop_name }}</h1>
+  <p class="lede">
+    {% set owner_n = pending.get("owner", 0) %}{% set staff_n = pending.get("staff", 0) %}
+    {% if owner_n + staff_n %}
+      <a href="/proposals">{{ owner_n + staff_n }} price change{{ "s" if owner_n + staff_n != 1 }} waiting</a>
+      ({{ owner_n }} need the owner, {{ staff_n }} staff can approve).
+    {% else %}
+      No price changes waiting for approval.
+    {% endif %}
+  </p>
+</div>
+{% block upload %}{% endblock %}
+<section class="section">
+  <h2>Recent invoices</h2>
+  {% if invoices %}
+  <table class="table">
+    <thead><tr><th>Invoice</th><th>Supplier</th><th>Lines</th><th>Read by</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for inv in invoices %}
+      <tr>
+        <td><a href="/invoices/{{ inv.id }}">#{{ inv.id }}</a> <span class="muted">{{ inv.created_at[:10] }}</span></td>
+        <td>{{ inv.supplier_name or "Not set" }}</td>
+        <td>{{ inv.line_count }}</td>
+        <td>{{ {"runpod": "AI (RunPod)", "fixture": "Simulated AI", "manual": "Manual entry"}[inv.extraction_source] }}</td>
+        <td><span class="status status-{{ inv.status }}">{{ {"review": "Needs review", "manual": "Enter lines", "proposed": "Prices proposed"}[inv.status] }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No invoices yet. Upload a supplier invoice photo to start.</p>
+  {% endif %}
+</section>
+{% endblock %}
