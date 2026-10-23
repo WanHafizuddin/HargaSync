@@ -1,5 +1,14 @@
+modules = ["python-3.11"]
 run = "python src/main.py"
 entrypoint = "src/main.py"
 
 [nix]
 channel = "stable-24_05"
+
+[[ports]]
+localPort = 8000
+externalPort = 80
+
+[deployment]
+run = ["python", "src/main.py"]
+deploymentTarget = "cloudrun"

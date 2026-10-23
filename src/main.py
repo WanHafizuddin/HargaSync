@@ -1,19 +1,15 @@
-"""Application entry point.
-
-Replace this file with your project's main logic.
-"""
+"""Application entry point: `python src/main.py` (used by Replit's Run button)."""
 
 import os
 
-from utils import format_greeting, summarize
+import uvicorn
+
+from hargasync.app import create_app
 
 
 def main() -> None:
-    project_name = os.getenv("PROJECT_NAME", "Project Name")
-    print(format_greeting(project_name))
-
-    sample_data = [12, 7, 3, 21, 9]
-    print(f"Result: {summarize(sample_data)}")
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(create_app(), host="0.0.0.0", port=port, proxy_headers=True, forwarded_allow_ips="*")
 
 
 if __name__ == "__main__":
