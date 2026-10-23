@@ -4,6 +4,7 @@ import sqlite3
 
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from .auth import (
@@ -17,6 +18,7 @@ from .config import Settings, load_settings
 from .db import connect, init_db
 from .extraction import build_extractor
 from .routes_invoices import router as invoices_router
+from .routes_proposals import router as proposals_router
 from .seed import is_empty, seed_demo
 from .web import PACKAGE_DIR, redirect, render
 
@@ -48,6 +50,12 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
     app.mount("/static", StaticFiles(directory=str(PACKAGE_DIR / "static")), name="static")
     app.add_exception_handler(LoginRequired, lambda request, exc: redirect("/login"))
 
+    async def http_error(request: Request, exc: StarletteHTTPException):
+        context = {"status": exc.status_code, "detail": exc.detail}
+        return render(request, "error.html", context, status_code=exc.status_code)
+
+    app.add_exception_handler(StarletteHTTPException, http_error)
+
     @app.get("/login")
     def login_page(request: Request):
         if request.session.get("user_id"):
@@ -77,5 +85,6 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
         return redirect("/login")
 
     app.include_router(invoices_router)
+    app.include_router(proposals_router)
 
     return app

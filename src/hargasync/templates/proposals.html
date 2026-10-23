@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Approvals | HargaSync{% endblock %}
+{% set status_labels = {"pending": "Waiting", "blocked": "Blocked", "approved": "Approved", "rejected": "Rejected", "stale": "Stale"} %}
+{% block content %}
+<div class="page-head">
+  <h1>Price approvals</h1>
+  <p class="lede">
+    {% if user.role == "owner" %}You can approve any change, adjust a price within its ceiling, or reject it.
+    {% elif user.role == "staff" %}You can approve small changes (5% or less, no warnings, not price-controlled). The rest wait for the owner.
+    {% else %}Read-only: you can see every proposal and decision.{% endif %}
+  </p>
+</div>
+
+{% if not open_rows %}
+  <p class="empty">Nothing waiting. Prices are proposed after an invoice is reviewed on the <a href="/">Invoices</a> page.</p>
+{% endif %}
+
+<ol class="proposals">
+{% for row in open_rows %}
+  {% set flags = row.flags|from_json %}
+  <li class="proposal proposal-{{ row.status }}" id="proposal-{{ row.id }}">
+    <div class="proposal-main">
+      <h2 class="proposal-title">{{ row.name_bm }} <span class="muted">per {{ row.unit }}</span></h2>
+      <p class="muted proposal-meta">{{ row.sku }}, from <a href="/invoices/{{ row.invoice_id }}">invoice #{{ row.invoice_id }}</a></p>
+      <p class="proposal-price">
+        {% if row.old_price_sen %}<span class="price-old">{{ row.old_price_sen|rm }}</span>{% endif %}
+        {% if row.proposed_price_sen %}<span class="price-tag">{{ row.proposed_price_sen|rm }}</span>
+        {% else %}<span class="status status-blocked">No new price</span>{% endif %}
+      </p>
+      <p class="proposal-cost">Cost {{ row.old_cost_sen|rm }} to {{ row.new_cost_sen|rm }}, suggested {{ row.suggested_price_sen|rm }}
+        {%- if row.cap_sen %}, ceiling {{ row.cap_sen|rm }}
+          {% if row.limit_verification == "demo" %}<strong class="demo">({{ demo_label }})</strong>{% else %}({{ row.limit_source }}){% endif %}
+        {% endif %}
+      </p>
+      {% if flags %}<ul class="flags">{% for f in flags %}<li class="flag flag-{{ f }}">{{ f|flag_label }}</li>{% endfor %}</ul>{% endif %}
+      <details class="why">
+        <summary>How this price was worked out</summary>
+        <ul>{% for line in row.explanation|from_json %}<li>{{ line }}</li>{% endfor %}</ul>
+      </details>
+    </div>
+    <div class="proposal-decide">
+      <p><span class="status status-{{ row.status }}">{{ status_labels[row.status] }}</span>
+        {% if row.status == "pending" %}<span class="muted">{{ "Owner" if row.required_role == "owner" else "Staff or owner" }} can approve</span>{% endif %}
+      </p>
+      {% if can_approve(row) %}
+        <form method="post" action="/proposals/{{ row.id }}/approve">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          {% if user.role == "owner" %}
+          <details class="override">
+            <summary>Use a different price</summary>
+            <label>Price (RM){% if row.cap_sen %}, at most {{ row.cap_sen|rm }}{% endif %}
+              <input name="override_price" inputmode="decimal" placeholder="{{ '%.2f'|format(row.proposed_price_sen / 100) }}">
+            </label>
+            <label>Reason <input name="note" maxlength="500" placeholder="Why this price?"></label>
+          </details>
+          {% endif %}
+          <button class="button" type="submit">Approve {{ row.proposed_price_sen|rm }}</button>
+        </form>
+      {% elif row.status == "pending" and user.role == "staff" %}
+        <p class="hint">Waiting for the owner.</p>
+      {% endif %}
+      {% if user.role == "owner" or (user.role == "staff" and can_approve(row)) %}
+        <form method="post" action="/proposals/{{ row.id }}/reject" class="reject">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="note" value="">
+          <button class="button button-danger" type="submit">Reject</button>
+        </form>
+      {% endif %}
+    </div>
+  </li>
+{% endfor %}
+</ol>
+
+{% if decided %}
+<section class="section">
+  <h2>Recent decisions</h2>
+  <table class="table">
+    <thead><tr><th>Product</th><th>Decision</th><th class="num">Old price</th><th class="num">Final price</th><th>By</th><th>Note</th></tr></thead>
+    <tbody>
+    {% for row in decided %}
+      <tr>
+        <td data-label="Product">{{ row.name_bm }}</td>
+        <td data-label="Decision"><span class="status status-{{ row.status }}">{{ status_labels[row.status] }}</span></td>
+        <td data-label="Old price" class="num">{{ row.old_price_sen|rm }}</td>
+        <td data-label="Final price" class="num">{{ row.final_price_sen|rm }}</td>
+        <td data-label="By">{{ row.decided_by_name or "System" }}</td>
+        <td data-label="Note">{{ row.decision_note or "" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

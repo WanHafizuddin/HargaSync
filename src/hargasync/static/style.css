@@ -214,3 +214,38 @@ input[type="checkbox"] { display: inline; width: auto; margin: 0 6px 0 0; }
   .review { grid-template-columns: 1fr; }
   .review-photo { position: static; max-width: 520px; }
 }
+
+/* Approvals */
+.proposals { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.proposal {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 300px);
+  gap: 20px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--tag-edge);
+  border-radius: var(--radius-s);
+}
+.proposal-blocked { border-left-color: var(--red); }
+.proposal-title { margin: 0; font-size: 1.4rem; }
+.proposal-title .muted { font: 400 1rem var(--font-ui); }
+.proposal-meta, .proposal-cost { margin: 2px 0; font-size: 0.95rem; }
+.proposal-price { margin: 10px 0 6px; }
+.proposal-price .price-tag { font-size: 1.6rem; }
+.demo { color: var(--red); }
+.why { margin-top: 8px; font-size: 0.92rem; }
+.why summary, .override summary { cursor: pointer; color: var(--teal); }
+.why ul { margin: 6px 0 0; padding-left: 20px; }
+.proposal-decide { border-left: 1px dashed var(--line); padding-left: 18px; }
+.proposal-decide p { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.proposal-decide .button { width: 100%; margin-top: 4px; }
+.override { margin-bottom: 8px; font-size: 0.95rem; }
+.override label { margin: 8px 0 0; }
+.reject { margin-top: 8px; }
+.error-page { max-width: 560px; margin: 12vh auto 0; }
+
+@media (max-width: 760px) {
+  .proposal { grid-template-columns: 1fr; }
+  .proposal-decide { border-left: 0; border-top: 1px dashed var(--line); padding: 12px 0 0; }
+}

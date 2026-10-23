@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} | HargaSync{% endblock %}
+{% block content %}
+<section class="error-page">
+  <p class="brand"><span class="brand-mark" aria-hidden="true"></span>HargaSync</p>
+  <h1>{% if status == 404 %}Not found{% elif status == 403 %}Not allowed{% else %}Something went wrong{% endif %}</h1>
+  <p class="lede">{{ detail if detail and detail != "Not Found" else "That page does not exist in your shop." }}</p>
+  <p><a class="button" href="/">Back to invoices</a></p>
+</section>
+{% endblock %}
