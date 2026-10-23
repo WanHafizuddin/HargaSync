@@ -1,0 +1,5 @@
+# RunPod worker dependencies (torch comes from the base image in the Dockerfile).
+runpod>=1.7
+transformers>=4.51,<5
+accelerate>=1.0
+pillow>=10

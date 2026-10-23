@@ -1,0 +1,15 @@
+{
+  "_note": "Fictional demo invoice. This is what the vision model is expected to return for sample_invoice.png; FixtureExtractor (AI_MODE=fixture) returns it as 'Simulated AI'.",
+  "supplier_name": "Syarikat Borong Maju Jaya Sdn. Bhd. (DEMO)",
+  "invoice_date": "2026-10-22",
+  "lines": [
+    {"name": "Gula Pasir Kasar 1kg", "unit": "pek", "qty": 20, "unit_cost": 2.75},
+    {"name": "Minyak Masak Botol 5kg", "unit": "botol", "qty": 6, "unit_cost": 31.50},
+    {"name": "Susu Pekat Manis 500g", "unit": "karton", "qty": 2, "unit_cost": 79.20},
+    {"name": "Tepung Gandum 1kg", "unit": "pek", "qty": 10, "unit_cost": 1.60},
+    {"name": "Ayam Standard (sekilo)", "unit": "kg", "qty": 15, "unit_cost": 8.60},
+    {"name": "Telur Gred A 30 biji", "unit": "papan", "qty": 5, "unit_cost": 13.20},
+    {"name": "Kicap Msin 340ml", "unit": "botol", "qty": 12, "unit_cost": 3.90},
+    {"name": "Biskut Kraker Krim 400g", "unit": "pek", "qty": 8, "unit_cost": 4.20}
+  ]
+}
