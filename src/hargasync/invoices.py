@@ -101,6 +101,8 @@ def create_invoice(
             extracted = extractor.extract(image, mime)
         except ExtractionError as exc:
             error = str(exc)
+        except Exception as exc:  # adapter boundary: any AI failure means manual entry, never a 500
+            error = f"AI reading failed unexpectedly ({exc.__class__.__name__})"
         ext = next(e for m, e in IMAGE_FORMATS.values() if m == mime)
         image_rel = f"uploads/{user.shop_id}/{uuid.uuid4().hex}.{ext}"
 
@@ -151,14 +153,14 @@ def save_lines(
     supplier_name: str | None = None,
 ) -> None:
     """Replace the invoice's lines with the reviewed ones. A product picked by a person is 'confirmed'."""
-    invoice = get_invoice(conn, user.shop_id, invoice_id)
-    if invoice is None:
-        raise LookupError(invoice_id)
-    if invoice["status"] == "proposed":
-        raise InvoiceError("This invoice already has price proposals and can no longer be edited.")
-    products, aliases = load_catalogue(conn, user.shop_id)
-    shop_product_ids = {p.id for p in products}
     with transaction(conn):
+        invoice = get_invoice(conn, user.shop_id, invoice_id)
+        if invoice is None:
+            raise LookupError(invoice_id)
+        if invoice["status"] == "proposed":
+            raise InvoiceError("This invoice already has price proposals and can no longer be edited.")
+        products, aliases = load_catalogue(conn, user.shop_id)
+        shop_product_ids = {p.id for p in products}
         conn.execute("DELETE FROM invoice_lines WHERE invoice_id = ?", (invoice_id,))
         for edit in lines:
             match = match_line(edit.raw_name, edit.raw_unit, products, aliases)
@@ -183,42 +185,48 @@ def save_lines(
 
 
 def confirm_invoice(conn: sqlite3.Connection, user: CurrentUser, invoice_id: int, on: date) -> list[int]:
-    """Turn every reviewed line into a price proposal, in one transaction."""
-    invoice = get_invoice(conn, user.shop_id, invoice_id)
-    if invoice is None:
-        raise LookupError(invoice_id)
-    if invoice["status"] == "proposed":
-        raise InvoiceError("This invoice already has price proposals.")
-    lines = conn.execute(
-        "SELECT l.*, p.name_bm FROM invoice_lines l LEFT JOIN products p ON p.id = l.product_id"
-        " WHERE l.invoice_id = ? AND l.match_status != 'skipped' ORDER BY l.position",
-        (invoice_id,),
-    ).fetchall()
-    if not lines:
-        raise InvoiceError("There are no lines to price. Add the invoice lines first.")
-    unresolved = [l for l in lines if l["match_status"] in UNRESOLVED or l["product_id"] is None]
-    if unresolved:
-        n = len(unresolved)
-        raise InvoiceError(
-            f"Resolve {n} line{'s' if n != 1 else ''} first: pick the catalogue product (and units per pack) or skip it."
-        )
-    seen: dict[int, int] = {}
-    for line in lines:
-        if line["product_id"] in seen:
-            raise InvoiceError(
-                f"Lines {seen[line['product_id']]} and {line['position']} are the same product ({line['name_bm']}). "
-                "Merge them or skip one: a duplicate product cannot get two prices."
-            )
-        seen[line["product_id"]] = line["position"]
-
-    limits = [limit_from_row(r) for r in conn.execute("SELECT * FROM price_limits")]
+    """Turn every reviewed line into a price proposal. Checks and writes share one write transaction,
+    so two confirms of the same invoice cannot both create proposals."""
     proposal_ids = []
     with transaction(conn):
+        invoice = get_invoice(conn, user.shop_id, invoice_id)
+        if invoice is None:
+            raise LookupError(invoice_id)
+        if invoice["status"] == "proposed":
+            raise InvoiceError("This invoice already has price proposals.")
+        lines = conn.execute(
+            "SELECT l.*, p.name_bm FROM invoice_lines l LEFT JOIN products p ON p.id = l.product_id"
+            " WHERE l.invoice_id = ? AND l.match_status != 'skipped' ORDER BY l.position",
+            (invoice_id,),
+        ).fetchall()
+        if not lines:
+            raise InvoiceError("There are no lines to price. Add the invoice lines first.")
+        unresolved = [l for l in lines if l["match_status"] in UNRESOLVED or l["product_id"] is None]
+        if unresolved:
+            n = len(unresolved)
+            raise InvoiceError(
+                f"Resolve {n} line{'s' if n != 1 else ''} first: pick the catalogue product (and units per pack) or skip it."
+            )
+        seen: dict[int, int] = {}
+        for line in lines:
+            if line["product_id"] in seen:
+                raise InvoiceError(
+                    f"Lines {seen[line['product_id']]} and {line['position']} are the same product ({line['name_bm']}). "
+                    "Merge them or skip one: a duplicate product cannot get two prices."
+                )
+            seen[line["product_id"]] = line["position"]
+
+        limits = [limit_from_row(r) for r in conn.execute("SELECT * FROM price_limits")]
         for line in lines:
             product = conn.execute(
                 "SELECT * FROM products WHERE id = ? AND shop_id = ?", (line["product_id"], user.shop_id)
             ).fetchone()
             new_cost = round_half_up_sen(Decimal(line["unit_cost_sen"]) / line["pack_size"])
+            if new_cost <= 0:
+                raise InvoiceError(
+                    f"Line {line['position']} ({line['raw_name']}) costs RM 0.00 per {product['unit']}. "
+                    "Skip free items: they cannot set a selling price."
+                )
             code = product["controlled_item_code"]
             limit = (
                 find_applicable_limit(limits, code, product["unit"], user.district, user.retail_level, on)
@@ -245,14 +253,19 @@ def confirm_invoice(conn: sqlite3.Connection, user: CurrentUser, invoice_id: int
                     json.dumps(result.explanation), now_iso(),
                 ),
             ).lastrowid)
-            if line["match_status"] == "confirmed":
+            alias_norm = normalize(line["raw_name"])
+            if line["match_status"] == "confirmed" and alias_norm:
                 conn.execute(
                     "INSERT INTO product_aliases (shop_id, product_id, alias_norm, unit_norm, pack_size)"
                     " VALUES (?, ?, ?, ?, ?) ON CONFLICT (shop_id, alias_norm, unit_norm)"
                     " DO UPDATE SET product_id = excluded.product_id, pack_size = excluded.pack_size",
-                    (user.shop_id, product["id"], normalize(line["raw_name"]), normalize(line["raw_unit"]), line["pack_size"]),
+                    (user.shop_id, product["id"], alias_norm, normalize(line["raw_unit"]), line["pack_size"]),
                 )
-        conn.execute("UPDATE invoices SET status = 'proposed' WHERE id = ?", (invoice_id,))
+        updated = conn.execute(
+            "UPDATE invoices SET status = 'proposed' WHERE id = ? AND status != 'proposed'", (invoice_id,)
+        ).rowcount
+        if updated != 1:
+            raise InvoiceError("This invoice already has price proposals.")
         log_event(conn, user.shop_id, user.user_id, "invoice_confirmed", "invoice", invoice_id, {
             "proposals": len(proposal_ids),
         })

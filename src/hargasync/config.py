@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 AI_MODES = ("runpod", "fixture", "off")
+PLACEHOLDER_SECRETS = {"change-me", "changeme", "secret"}
+MIN_SECRET_LENGTH = 16
 
 
 @dataclass(frozen=True)
@@ -25,10 +27,13 @@ def _flag(name: str, default: bool) -> bool:
 
 
 def load_settings() -> Settings:
-    secret_key = os.getenv("HARGASYNC_SECRET_KEY", "")
-    if not secret_key:
+    secret_key = os.getenv("HARGASYNC_SECRET_KEY", "").strip()
+    if secret_key in PLACEHOLDER_SECRETS or len(secret_key) < MIN_SECRET_LENGTH:
         secret_key = secrets.token_urlsafe(32)
-        print("WARNING: HARGASYNC_SECRET_KEY is not set; using a random key (sessions reset on restart).")
+        print(
+            "WARNING: HARGASYNC_SECRET_KEY is missing, too short or a placeholder; "
+            "using a random key (sessions reset on restart)."
+        )
     runpod_api_key = os.getenv("RUNPOD_API_KEY", "")
     runpod_endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID", "")
     default_mode = "runpod" if runpod_api_key and runpod_endpoint_id else "fixture"

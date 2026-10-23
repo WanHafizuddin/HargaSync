@@ -115,9 +115,12 @@ class RunPodExtractor:
         try:
             response = self.client.request(method, url, headers=headers, **kwargs)
             response.raise_for_status()
-            return response.json()
+            job = response.json()
         except (httpx.HTTPError, ValueError) as exc:
             raise ExtractionError(f"RunPod request failed: {exc.__class__.__name__}") from exc
+        if not isinstance(job, dict):
+            raise ExtractionError("RunPod returned an unexpected response")
+        return job
 
     def extract(self, image: bytes, mime: str) -> ExtractedInvoice:
         deadline = time.monotonic() + self.timeout_s
@@ -130,7 +133,9 @@ class RunPodExtractor:
             job = self._call("GET", f"status/{job.get('id')}")
         if job.get("status") != "COMPLETED":
             raise ExtractionError(f"RunPod job ended with status {job.get('status')!r}")
-        output = job.get("output") or {}
+        output = job.get("output")
+        if not isinstance(output, dict):
+            raise ExtractionError("RunPod returned no readable output")
         if "error" in output or "invoice" not in output:
             raise ExtractionError(f"AI could not read the invoice: {output.get('error', 'no invoice in output')}")
         return parse_extraction(output["invoice"])

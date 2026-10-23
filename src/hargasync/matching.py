@@ -35,12 +35,14 @@ class MatchResult:
 def normalize(text: str) -> str:
     text = unicodedata.normalize("NFKD", text or "")
     text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
-    text = re.sub(r"[^a-z0-9]+", " ", text)
+    text = re.sub(r"[\W_]+", " ", text)
     return text.strip()
 
 
 def match_line(raw_name: str, raw_unit: str, products: list[ProductRef], aliases: list[AliasRef]) -> MatchResult:
     name, unit = normalize(raw_name), normalize(raw_unit)
+    if not name:
+        return MatchResult(None, "unknown", 0.0)
     by_id = {p.id: p for p in products}
 
     for alias in aliases:

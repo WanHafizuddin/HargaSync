@@ -7,8 +7,11 @@
   <button class="button" type="button" onclick="window.print()">Print tags</button>
   <a class="button button-quiet" href="/tags">Choose other products</a>
 </div>
-{% if skipped %}
-  <p class="flash flash-warning no-print">Not printed, no approved price yet: {% for p in skipped %}{{ p.name_bm }}{{ ", " if not loop.last }}{% endfor %}.</p>
+{% if held %}
+  <div class="flash flash-warning no-print">
+    <p>Not printed:</p>
+    <ul>{% for p, reason in held %}<li>{{ p.name_bm }}: {{ reason }}.</li>{% endfor %}</ul>
+  </div>
 {% endif %}
 {% for sheet in sheets %}
 <section class="sheet" aria-label="Tag sheet {{ loop.index }}">

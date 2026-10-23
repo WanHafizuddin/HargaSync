@@ -10,7 +10,7 @@ from .audit import list_events, log_event
 from .auth import CurrentUser, current_user, get_db, require_roles, verify_csrf
 from .db import transaction
 from .limits import find_applicable_limit, limit_from_row
-from .money import MoneyError, parse_rm, today_my
+from .money import MoneyError, format_rm, parse_rm, today_my
 from .web import flash, redirect, render
 
 router = APIRouter()
@@ -57,13 +57,19 @@ def print_tags(
     approvals = _last_approvals(conn, user.shop_id)
     limits = [limit_from_row(r) for r in conn.execute("SELECT * FROM price_limits")]
     today = today_my()
-    labels, skipped = [], []
+    labels, held = [], []
     for product in rows:
         if product["price_sen"] is None:
-            skipped.append(product)
+            held.append((product, "no approved price yet"))
             continue
         code = product["controlled_item_code"]
         limit = find_applicable_limit(limits, code, product["unit"], user.district, user.retail_level, today) if code else None
+        if code and limit is None:
+            held.append((product, "price-controlled, and no valid ceiling today, so the price cannot be confirmed"))
+            continue
+        if limit is not None and product["price_sen"] > limit.max_price_sen:
+            held.append((product, f"{format_rm(product['price_sen'])} is above the ceiling of {format_rm(limit.max_price_sen)}"))
+            continue
         decided = approvals.get(product["id"])
         labels.append({
             "product": product,
@@ -72,7 +78,7 @@ def print_tags(
             "effective": date.fromisoformat(decided[:10]) if decided else today,
         })
     sheets = [labels[i : i + TAGS_PER_SHEET] for i in range(0, len(labels), TAGS_PER_SHEET)]
-    return render(request, "tags_print.html", {"user": user, "sheets": sheets, "skipped": skipped, "count": len(labels)})
+    return render(request, "tags_print.html", {"user": user, "sheets": sheets, "held": held, "count": len(labels)})
 
 
 @router.get("/activity")
@@ -111,6 +117,21 @@ def _parse_product(sku, name_bm, unit, cost, price, margin, code) -> tuple:
     return sku, name_bm, unit, cost_sen, price_sen, str(margin_value.normalize()), code.strip() or None
 
 
+def _check_ceiling(conn, user: CurrentUser, unit: str, price_sen: int | None, code: str | None) -> None:
+    """A controlled product may only start with a price that a valid ceiling allows."""
+    if not code or price_sen is None:
+        return
+    limits = [limit_from_row(r) for r in conn.execute("SELECT * FROM price_limits WHERE item_code = ?", (code,))]
+    limit = find_applicable_limit(limits, code, unit, user.district, user.retail_level, today_my())
+    if limit is None:
+        raise ValueError(
+            f"No valid ceiling for {code} per {unit} in {user.district} today. "
+            "Leave the shelf price empty: the first price will go through approval."
+        )
+    if price_sen > limit.max_price_sen:
+        raise ValueError(f"{format_rm(price_sen)} is above the ceiling of {format_rm(limit.max_price_sen)} for {code} per {unit}.")
+
+
 @router.post("/catalogue")
 def add_product(
     request: Request,
@@ -131,6 +152,7 @@ def add_product(
             "controlled_item_code": controlled_item_code}
     try:
         values = _parse_product(sku, name_bm, unit, cost, price, margin, controlled_item_code)
+        _check_ceiling(conn, user, unit=values[2], price_sen=values[4], code=values[6])
         with transaction(conn):
             product_id = conn.execute(
                 "INSERT INTO products (shop_id, sku, name_bm, unit, cost_sen, price_sen, target_margin,"

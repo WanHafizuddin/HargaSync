@@ -149,7 +149,6 @@ cd HargaSync
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env             # optional; values are read from the environment
 python src/main.py               # http://localhost:8000
 ```
 
@@ -185,7 +184,8 @@ python scripts/benchmark.py
 - **Development:** the team codes in a shared Repl imported from this repository.
 - **Hosting:** the FastAPI app is deployed with Replit Deployments at the Live Demo link above (`.replit` → `python src/main.py`).
 - **Secrets:** `HARGASYNC_SECRET_KEY` and the RunPod credentials live in Replit Secrets, never in the code.
-- **Limitation:** SQLite lives on the deployment's disk, which Replit can reset on redeploy; the demo data re-seeds automatically.
+- **Deployment type:** `.replit` targets a Reserved VM (`gce`): one always-on instance, so SQLite and uploaded photos stay put between requests. Autoscale would scale to zero and lose them. A redeploy still resets the disk; the demo data re-seeds automatically.
+- **Secrets for a deployment:** set `HARGASYNC_SECRET_KEY` (at least 16 characters; placeholders are refused) and `HTTPS_ONLY=1`.
 
 📄 Proof of use: [`submission/SDC2026_TeamName_Replit_POU.pdf`](submission/SDC2026_TeamName_Replit_POU.pdf)
 

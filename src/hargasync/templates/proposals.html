@@ -23,8 +23,9 @@
       <h2 class="proposal-title">{{ row.name_bm }} <span class="muted">per {{ row.unit }}</span></h2>
       <p class="muted proposal-meta">{{ row.sku }}, from <a href="/invoices/{{ row.invoice_id }}">invoice #{{ row.invoice_id }}</a></p>
       <p class="proposal-price">
-        {% if row.old_price_sen %}<span class="price-old">{{ row.old_price_sen|rm }}</span>{% endif %}
+        {% if row.old_price_sen and row.old_price_sen != row.proposed_price_sen %}<span class="price-old">{{ row.old_price_sen|rm }}</span>{% endif %}
         {% if row.proposed_price_sen %}<span class="price-tag">{{ row.proposed_price_sen|rm }}</span>
+        {% if row.old_price_sen == row.proposed_price_sen %}<span class="muted">no change</span>{% endif %}
         {% else %}<span class="status status-blocked">No new price</span>{% endif %}
       </p>
       <p class="proposal-cost">Cost {{ row.old_cost_sen|rm }} to {{ row.new_cost_sen|rm }}, suggested {{ row.suggested_price_sen|rm }}

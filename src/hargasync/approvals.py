@@ -1,5 +1,6 @@
 """Approving or rejecting a price proposal. Every check is redone inside one write transaction."""
 
+import json
 import sqlite3
 from datetime import date
 from decimal import Decimal
@@ -44,10 +45,30 @@ def _recompute(conn, user: CurrentUser, proposal, product, on: date):
     return result, limit
 
 
-def _apply_approval(conn, user, proposal, product, override_price_sen, note, on) -> int:
+def _refresh(conn, user, proposal, result, limit) -> None:
+    """Rules gave a different answer than the proposal shows: store the new answer instead of applying it."""
+    conn.execute(
+        "UPDATE price_proposals SET suggested_price_sen = ?, cap_sen = ?, limit_id = ?, proposed_price_sen = ?,"
+        " flags = ?, required_role = ?, status = ?, explanation = ? WHERE id = ? AND status = 'pending'",
+        (
+            result.suggested_price_sen, result.cap_sen, limit.id if limit else None, result.proposed_price_sen,
+            json.dumps(result.flags), result.required_role, result.status, json.dumps(result.explanation),
+            proposal["id"],
+        ),
+    )
+    log_event(conn, user.shop_id, user.user_id, "proposal_refreshed", "proposal", proposal["id"], {
+        "old_proposed_price_sen": proposal["proposed_price_sen"],
+        "new_proposed_price_sen": result.proposed_price_sen,
+        "status": result.status,
+    })
+
+
+def _apply_approval(conn, user, proposal, product, override_price_sen, note, on) -> tuple[str, int | None]:
     result, limit = _recompute(conn, user, proposal, product, on)
-    if result.status == "blocked":
-        raise ApprovalError("blocked", "No valid ceiling for this controlled item today, so its price cannot change.")
+    shown = (proposal["status"], proposal["proposed_price_sen"], proposal["cap_sen"], proposal["required_role"])
+    if (result.status, result.proposed_price_sen, result.cap_sen, result.required_role) != shown:
+        _refresh(conn, user, proposal, result, limit)
+        return "changed", result.proposed_price_sen
     if not role_can_approve(user.role, result.required_role):
         raise ApprovalError("forbidden", "This change needs the owner's approval.")
     final = result.proposed_price_sen
@@ -63,6 +84,8 @@ def _apply_approval(conn, user, proposal, product, override_price_sen, note, on)
                 "over_cap", f"{format_rm(override_price_sen)} is above the ceiling of {format_rm(result.cap_sen)}."
             )
         final = override_price_sen
+    if final is None or final <= 0:
+        raise ApprovalError("bad_price", "This proposal has no usable price (RM 0.00). Reject it and skip free items.")
 
     updated = conn.execute(
         "UPDATE products SET cost_sen = ?, price_sen = ?, version = version + 1 WHERE id = ? AND version = ?",
@@ -91,7 +114,7 @@ def _apply_approval(conn, user, proposal, product, override_price_sen, note, on)
         "approver_role": user.role,
         "required_role": result.required_role,
     })
-    return final
+    return "approved", final
 
 
 def approve_proposal(
@@ -104,7 +127,7 @@ def approve_proposal(
 ) -> int:
     """Re-check rules, role and catalogue version, then update price and log it atomically."""
     note = (note or "").strip()[:500]
-    stale = False
+    outcome, final = "stale", None
     with transaction(conn):
         proposal = _load_proposal(conn, user, proposal_id)
         if proposal["status"] == "blocked":
@@ -122,12 +145,16 @@ def approve_proposal(
             log_event(conn, user.shop_id, user.user_id, "proposal_stale", "proposal", proposal_id, {
                 "product": product["name_bm"], "base_version": proposal["base_version"], "current_version": product["version"],
             })
-            stale = True
         else:
-            final = _apply_approval(conn, user, proposal, product, override_price_sen, note, on)
-    if stale:
+            outcome, final = _apply_approval(conn, user, proposal, product, override_price_sen, note, on)
+    if outcome == "stale":
         raise ApprovalError(
             "stale", "The catalogue changed since this proposal was made (another price was approved). It is now stale."
+        )
+    if outcome == "changed":
+        now = f"It now proposes {format_rm(final)}" if final else "It is now blocked: no valid ceiling"
+        raise ApprovalError(
+            "changed", f"The price rules changed since this was proposed (for example a new ceiling). {now}. Check it again."
         )
     return final
 

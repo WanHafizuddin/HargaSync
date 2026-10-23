@@ -195,7 +195,7 @@ input[type="checkbox"] { display: inline; width: auto; margin: 0 6px 0 0; }
 
 /* Upload and review */
 .upload { max-width: 640px; }
-.review { display: grid; grid-template-columns: minmax(260px, 34%) 1fr; gap: 24px; align-items: start; }
+.review { display: grid; grid-template-columns: minmax(240px, 28%) 1fr; gap: 24px; align-items: start; }
 .review-no-image { grid-template-columns: 1fr; }
 .review-photo { margin: 0; position: sticky; top: 16px; }
 .review-photo img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface); }
@@ -204,13 +204,14 @@ input[type="checkbox"] { display: inline; width: auto; margin: 0 6px 0 0; }
 .lines input, .lines select { margin-top: 0; padding: 6px 8px; }
 .lines td.num input { text-align: right; max-width: 7.5em; margin-left: auto; }
 .lines .status { margin-top: 6px; }
+.lines td:first-child input { min-width: 12em; }
 .lines .hint { display: block; margin-top: 4px; font-size: 0.85rem; max-width: 40ch; }
 .line-uncertain td:first-child { box-shadow: inset 4px 0 0 var(--tag-edge); }
 .line-unknown td:first-child { box-shadow: inset 4px 0 0 var(--red); }
 .line-skipped { opacity: 0.55; }
 .line-new input::placeholder { color: #8a989c; }
 
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
   .review { grid-template-columns: 1fr; }
   .review-photo { position: static; max-width: 520px; }
 }

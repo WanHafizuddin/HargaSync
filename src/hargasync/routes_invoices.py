@@ -63,7 +63,7 @@ def sample_invoice(user: CurrentUser = Depends(current_user)):
 
 
 @router.post("/invoices")
-async def upload_invoice(
+def upload_invoice(
     request: Request,
     photo: UploadFile | None = File(None),
     manual: str = Form(""),
@@ -75,7 +75,7 @@ async def upload_invoice(
     require_roles(user, *EDITORS)
     image = None
     if not manual:
-        image = await photo.read(MAX_UPLOAD_BYTES + 1) if photo is not None else b""
+        image = photo.file.read(MAX_UPLOAD_BYTES + 1) if photo is not None else b""
     try:
         invoice_id = create_invoice(conn, user, image, request.app.state.extractor, request.app.state.settings.data_dir)
     except UploadError as exc:
