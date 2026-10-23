@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Catalogue | HargaSync{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Catalogue</h1>
+  <p class="lede">Selling prices change only through approved proposals. Each product's target margin drives its suggested price.</p>
+</div>
+<table class="table">
+  <thead><tr><th>Product</th><th>SKU</th><th class="num">Cost</th><th class="num">Shelf price</th><th class="num">Target margin</th><th>Price control</th></tr></thead>
+  <tbody>
+  {% for p in products %}
+    <tr>
+      <td data-label="Product">{{ p.name_bm }} <span class="muted">per {{ p.unit }}</span></td>
+      <td data-label="SKU">{{ p.sku }}</td>
+      <td data-label="Cost" class="num">{{ p.cost_sen|rm }}</td>
+      <td data-label="Shelf price" class="num">{{ p.price_sen|rm }}</td>
+      <td data-label="Target margin" class="num">{{ "%g"|format(p.target_margin|float * 100) }}%</td>
+      <td data-label="Price control">{{ p.controlled_item_code or "" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if user.role == "owner" %}
+<section class="section panel add-product">
+  <h2>Add a product</h2>
+  {% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/catalogue" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Name in Bahasa Malaysia <input name="name_bm" value="{{ form.name_bm }}" maxlength="120" required></label>
+    <label>SKU <input name="sku" value="{{ form.sku }}" maxlength="40" required></label>
+    <label>Selling unit <input name="unit" value="{{ form.unit }}" maxlength="30" placeholder="pek, botol, kg" required></label>
+    <label>Current cost (RM) <input name="cost" value="{{ form.cost }}" inputmode="decimal" required></label>
+    <label>Current shelf price (RM, optional) <input name="price" value="{{ form.price }}" inputmode="decimal"></label>
+    <label>Target margin (%) <input name="margin" value="{{ form.margin or '15' }}" inputmode="decimal" required></label>
+    <label>Price-controlled item
+      <select name="controlled_item_code">
+        <option value="">Not price-controlled</option>
+        {% for code in codes %}<option value="{{ code }}" {% if form.controlled_item_code == code %}selected{% endif %}>{{ code }}</option>{% endfor %}
+      </select>
+    </label>
+    <div class="actions"><button class="button" type="submit">Add product</button></div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

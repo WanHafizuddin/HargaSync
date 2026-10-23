@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Tag sheet | HargaSync{% endblock %}
+{% block page_class %}page-tags{% endblock %}
+{% block content %}
+<div class="tag-toolbar no-print">
+  <p><strong>{{ count }} tag{{ "s" if count != 1 }}</strong> on {{ sheets|length }} A4 sheet{{ "s" if sheets|length != 1 }}. Print at 100% scale.</p>
+  <button class="button" type="button" onclick="window.print()">Print tags</button>
+  <a class="button button-quiet" href="/tags">Choose other products</a>
+</div>
+{% if skipped %}
+  <p class="flash flash-warning no-print">Not printed, no approved price yet: {% for p in skipped %}{{ p.name_bm }}{{ ", " if not loop.last }}{% endfor %}.</p>
+{% endif %}
+{% for sheet in sheets %}
+<section class="sheet" aria-label="Tag sheet {{ loop.index }}">
+  {% for label in sheet %}
+  {% set p = label.product %}
+  <article class="tag {% if label.controlled %}tag-controlled{% endif %}" aria-label="{{ p.name_bm }}, {{ p.price_sen|rm }}">
+    <p class="tag-name">{{ p.name_bm }}</p>
+    <p class="tag-price"><span class="tag-rm">RM</span>{{ "%d.%02d"|format(p.price_sen // 100, p.price_sen % 100) }}</p>
+    <p class="tag-unit">per {{ p.unit }}</p>
+    {% if label.controlled %}
+      <p class="tag-control">Barang kawalan harga</p>
+      {% if label.demo %}<p class="tag-demo">{{ demo_label }}</p>{% endif %}
+    {% endif %}
+    <p class="tag-foot"><span>{{ p.sku }}</span><span>Harga berkuat kuasa: {{ label.effective.strftime("%d/%m/%Y") }}</span></p>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+  <p class="empty">No tags to print. <a href="/tags">Choose products</a>.</p>
+{% endfor %}
+{% endblock %}

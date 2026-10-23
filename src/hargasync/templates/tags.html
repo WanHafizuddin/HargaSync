@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Print tags | HargaSync{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Print shelf tags</h1>
+  <p class="lede">Tags always use the approved catalogue price. Prices approved in the last 7 days are ticked.</p>
+</div>
+<form method="get" action="/tags/print">
+  <table class="table">
+    <thead><tr><th>Print</th><th>Product</th><th class="num">Shelf price</th><th>Last approved</th></tr></thead>
+    <tbody>
+    {% for p in products %}
+      <tr>
+        <td data-label="Print"><input type="checkbox" name="ids" value="{{ p.id }}" {% if p.id in recent %}checked{% endif %} {% if p.price_sen is none %}disabled{% endif %} aria-label="Print tag for {{ p.name_bm }}"></td>
+        <td data-label="Product">{{ p.name_bm }} <span class="muted">per {{ p.unit }}</span></td>
+        <td data-label="Shelf price" class="num">{% if p.price_sen %}<span class="price-tag">{{ p.price_sen|rm }}</span>{% else %}<span class="muted">No price yet</span>{% endif %}</td>
+        <td data-label="Last approved">{{ approvals.get(p.id, "")[:10] or "Not through HargaSync yet" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="actions"><button class="button" type="submit">Make A4 tag sheet</button></div>
+</form>
+{% endblock %}

@@ -18,6 +18,7 @@ from .config import Settings, load_settings
 from .db import connect, init_db
 from .extraction import build_extractor
 from .routes_invoices import router as invoices_router
+from .routes_outputs import router as outputs_router
 from .routes_proposals import router as proposals_router
 from .seed import is_empty, seed_demo
 from .web import PACKAGE_DIR, redirect, render
@@ -86,5 +87,6 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
 
     app.include_router(invoices_router)
     app.include_router(proposals_router)
+    app.include_router(outputs_router)
 
     return app

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Activity | HargaSync{% endblock %}
+{% set labels = {"invoice_uploaded": "Invoice uploaded", "invoice_reviewed": "Invoice lines edited", "invoice_confirmed": "Price proposals created", "price_approved": "Price approved", "price_rejected": "Proposal rejected", "proposal_stale": "Proposal went stale", "product_added": "Product added"} %}
+{% set sources = {"runpod": "AI on RunPod", "fixture": "Simulated AI", "manual": "hand"} %}
+{% block content %}
+<div class="page-head">
+  <h1>Activity</h1>
+  <p class="lede">Every upload, review and price decision in {{ user.shop_name }}. This log cannot be edited or deleted.</p>
+</div>
+{% if events %}
+<ol class="timeline">
+{% for e in events %}
+  {% set d = e.details %}
+  <li class="event event-{{ e.event_type }}">
+    <time datetime="{{ e.created_at }}">{{ e.created_at[:16]|replace("T", " ") }}</time>
+    <div>
+      <p class="event-title"><strong>{{ labels.get(e.event_type, e.event_type) }}</strong> by {{ e.actor_name or "System" }}</p>
+      <p class="event-detail">
+      {% if e.event_type == "price_approved" %}
+        {{ d.product }}: {{ d.old_price_sen|rm }} to <strong>{{ d.new_price_sen|rm }}</strong> (cost {{ d.old_cost_sen|rm }} to {{ d.new_cost_sen|rm }}).
+        {% if d.cap_sen %}Ceiling {{ d.cap_sen|rm }}, source: {{ d.ceiling_source }}.{% endif %}
+        {% if d.override %}Price set by the owner. Reason: {{ d.note }}.{% endif %}
+      {% elif e.event_type == "price_rejected" %}
+        Proposed {{ d.proposed_price_sen|rm }} not used.{% if d.note %} Reason: {{ d.note }}.{% endif %}
+      {% elif e.event_type == "invoice_uploaded" %}
+        <a href="/invoices/{{ e.entity_id }}">Invoice #{{ e.entity_id }}</a>:
+        {% if d.extraction_error %}AI could not read it ({{ d.extraction_error }}).{% else %}{{ d.lines }} line{{ "s" if d.lines != 1 }} read by {{ sources.get(d.source, d.source) }}.{% endif %}
+      {% elif e.event_type == "invoice_confirmed" %}
+        <a href="/invoices/{{ e.entity_id }}">Invoice #{{ e.entity_id }}</a>: {{ d.proposals }} proposal{{ "s" if d.proposals != 1 }}.
+      {% elif e.event_type == "invoice_reviewed" %}
+        <a href="/invoices/{{ e.entity_id }}">Invoice #{{ e.entity_id }}</a>: {{ d.lines }} line{{ "s" if d.lines != 1 }} saved.
+      {% elif e.event_type == "proposal_stale" %}
+        {{ d.product }}: another price was approved first, so this proposal was not used.
+      {% elif e.event_type == "product_added" %}
+        {{ d.product }} ({{ d.sku }}){% if d.price_sen %} at {{ d.price_sen|rm }}{% endif %}.
+      {% endif %}
+      </p>
+    </div>
+  </li>
+{% endfor %}
+</ol>
+{% else %}
+<p class="empty">Nothing yet. Activity appears once an invoice is uploaded.</p>
+{% endif %}
+{% endblock %}
