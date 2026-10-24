@@ -16,7 +16,7 @@
 
 | Field                  | Details                                     |
 | ---------------------- | ------------------------------------------- |
-| **Team Name**          | SURPrice                                    |
+| **Team Name**          | Umai                                        |
 | **Team Domain**        | Domain 2 — Orbyte Smart SME Challenge: Less Busywork, Better Business (Alpha Red Solutions) |
 | **SDG Track (1–17)**   | SDG 8 — Decent Work and Economic Growth (targets 8.2 and 8.3) |
 | **Team Leader**        | Ahmad Zhafir bin Razali                     |
@@ -250,7 +250,7 @@ python scripts/benchmark.py
 - **Deployment type:** `.replit` targets a Reserved VM (`gce`): one always-on instance, so SQLite and uploaded photos stay put between requests. Autoscale would scale to zero and lose them. A redeploy still resets the disk; the demo data re-seeds automatically.
 - **Secrets for a deployment:** set `HARGASYNC_SECRET_KEY` (at least 16 characters; placeholders are refused) and `HTTPS_ONLY=1`.
 
-📄 Proof of use: [`submission/SDC2026_SURPrice_Replit_POU.pdf`](submission/SDC2026_SURPrice_Replit_POU.pdf)
+📄 Proof of use: [`submission/SDC2026_Umai_Replit_POU.pdf`](submission/SDC2026_Umai_Replit_POU.pdf)
 
 ## How We Use RunPod *(Required)*
 
@@ -273,7 +273,7 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
   -d '{"input": {"image_base64": "<base64 photo>", "mime": "image/png"}}'
 ```
 
-📄 Proof of use: [`submission/SDC2026_SURPrice_Runpod_POU.pdf`](submission/SDC2026_SURPrice_Runpod_POU.pdf)
+📄 Proof of use: [`submission/SDC2026_Umai_Runpod_POU.pdf`](submission/SDC2026_Umai_Runpod_POU.pdf)
 
 ---
 
@@ -339,8 +339,8 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 - [ ] Demo video link added
 - [x] Replit used, with proof of use in `submission/`
 - [x] RunPod used, with proof of use in `submission/`
-- [ ] Preliminary submission completed (`SDC2026_SURPrice_Preliminary.pdf`)
-- [ ] Technology declaration completed (`SDC2026_SURPrice_TechDeclaration.pdf`)
+- [ ] Preliminary submission completed (`SDC2026_Umai_Preliminary.pdf`)
+- [ ] Technology declaration completed (`SDC2026_Umai_TechDeclaration.pdf`)
 - [x] Submission files renamed with your team name (replace `TeamName`)
 - [x] "How to Run" steps verified
 - [x] No API keys or secrets committed to the repository
