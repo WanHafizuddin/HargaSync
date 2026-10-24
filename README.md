@@ -19,8 +19,8 @@
 | **Team Name**          | SURPrice                                    |
 | **Team Domain**        | Domain 2 — Orbyte Smart SME Challenge: Less Busywork, Better Business (Alpha Red Solutions) |
 | **SDG Track (1–17)**   | SDG 8 — Decent Work and Economic Growth (targets 8.2 and 8.3) |
-| **Team Leader**        | Leader Name                                 |
-| **University**         | University Name(s)                          |
+| **Team Leader**        | Ahmad Zhafir bin Razali                     |
+| **University**         | Universiti Putra Malaysia (UPM)             |
 | **Number of Members**  | 3                                           |
 
 ## Links
@@ -30,7 +30,7 @@
 | GitHub Repository | https://github.com/WanHafizuddin/SURPrice      |
 | Replit Project    | https://replit.com/@whafiz012/SURPrice         |
 | Live Demo         | https://surprice.replit.app (demo logins are shown on the login page) |
-| RunPod Endpoint   | https://api.runpod.ai/v2/your-endpoint-id      |
+| RunPod Endpoint   | https://api.runpod.ai/v2/opdzmifqcyfxio       |
 | Slide Deck        | https://example.com/slides                     |
 | Demo Video        | https://example.com/demo-video                 |
 
@@ -255,10 +255,13 @@ python scripts/benchmark.py
 ## How We Use RunPod *(Required)*
 
 - **Workload:** invoice reading. A vision-language model (`Qwen/Qwen2.5-VL-7B-Instruct`, configurable with `MODEL_ID`) transcribes each invoice photo into JSON on a RunPod GPU.
-- **Setup:** `runpod/handler.py` is deployed as a **RunPod Serverless Endpoint**:
-  1. Build and push the worker image: `docker build -t <dockerhub-user>/hargasync-reader:latest runpod`, then `docker push` it.
-  2. In RunPod, create a Serverless endpoint from that image (a 24 GB GPU is enough), and optionally attach a network volume so model weights are cached at `/runpod-volume/hf-cache`.
-  3. Put the endpoint ID and an API key into Replit Secrets.
+- **Setup:** `runpod/handler.py` runs as a queue-based **RunPod Serverless Endpoint** that RunPod builds straight from this GitHub repository:
+  1. In RunPod, choose **Serverless → New Endpoint → GitHub Repo**, pick this repository and branch `main`, and set the Dockerfile path to `runpod/Dockerfile` with `runpod` as the build context.
+  2. Pick a 24 GB GPU from the previous generation (the image uses CUDA 12.4, while RunPod's latest-generation GPUs need CUDA 12.8+), with 0 active workers and 1 max worker so the endpoint costs nothing while idle.
+  3. Optionally cache `Qwen/Qwen2.5-VL-7B-Instruct` with RunPod's cached-model setting and set `HF_HOME=/runpod-volume/huggingface-cache`, so cold starts skip the model download.
+  4. Put the endpoint ID and an API key into Replit Secrets.
+
+  Without GitHub, build the image yourself with `docker build -t <dockerhub-user>/hargasync-reader:latest runpod`, push it, and create the endpoint from that image.
 - **Integration:** the app sends the photo to `/runsync` with `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID`, polls `/status/{id}` during cold starts, validates the returned JSON and falls back to manual entry on any failure.
 
 Example request:
@@ -276,12 +279,12 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 
 ## Evidence
 
-Measured with `python scripts/benchmark.py` on 23 October 2026:
+Measured with `python scripts/benchmark.py` in the Replit Shell on 24 October 2026, with invoice reading on the live RunPod endpoint:
 
 | Measure | Fixture | Result |
 | ------- | ------- | ------ |
 | Planted rule breaches intercepted (above ceiling, expired/wrong-district/wrong-unit ceiling, cost jump, below cost, large change, new product) | `fixtures/breaches.json`, 13 synthetic cases | 13/13 (100%) |
-| Invoice lines read exactly (name, quantity, unit cost) | `fixtures/invoices/`, 1 invoice, 8 lines | Not yet measured on RunPod. Simulated AI scores 100% by construction, which is not evidence. |
+| Invoice lines read exactly (name, quantity, unit cost) | `fixtures/invoices/`, 1 invoice, 8 lines | 8/8 (100%) on RunPod. This is one clean, computer-generated invoice, so it shows the pipeline works end to end, not accuracy on real phone photos. |
 | Automated tests | `tests/` | `python -m unittest discover -s tests -t .` |
 
 Targets from the proposal: 98%+ tag accuracy against approved prices, under 3 minutes from a 15-line invoice to printable tags, 100% of planted breaches intercepted. All ceilings, invoices, shops and people in the demo are fictional.
@@ -323,7 +326,7 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 
 | Name                                  | Role | GitHub                                           |
 | ------------------------------------- | ---- | ------------------------------------------------ |
-| Ahmad Zhafir bin Razali               | Role | [@username](https://github.com/username)         |
+| Ahmad Zhafir bin Razali               | Team Leader | [@username](https://github.com/username)         |
 | Nor Syameel Azraie bin Nor Ezlie Azram | Role | [@username](https://github.com/username)         |
 | Wan Hafizuddin bin Wan Harun          | Role | [@WanHafizuddin](https://github.com/WanHafizuddin) |
 
@@ -339,8 +342,8 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 - [ ] Preliminary submission completed (`SDC2026_SURPrice_Preliminary.pdf`)
 - [ ] Technology declaration completed (`SDC2026_SURPrice_TechDeclaration.pdf`)
 - [x] Submission files renamed with your team name (replace `TeamName`)
-- [ ] "How to Run" steps verified
-- [ ] No API keys or secrets committed to the repository
+- [x] "How to Run" steps verified
+- [x] No API keys or secrets committed to the repository
 
 ### Declarations to include
 
