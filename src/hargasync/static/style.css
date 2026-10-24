@@ -173,6 +173,10 @@ input[type="checkbox"] { display: inline; width: auto; margin: 0 6px 0 0; }
 .brand-large { font-size: 1.6rem; margin-bottom: 28px; }
 .login-pitch p:last-child { font-size: 1.15rem; max-width: 46ch; }
 .login-form .button { width: 100%; margin-top: 6px; }
+.demo-accounts { margin-top: 16px; padding: 10px 12px; background: var(--amber-bg); border: 1px solid #f0dc95; border-radius: var(--radius-m); font-size: 0.9rem; }
+.demo-accounts p { margin: 0 0 4px; }
+.demo-accounts ul { margin: 0; padding-left: 18px; }
+.demo-accounts code { background: var(--surface); }
 
 @media (max-width: 760px) {
   .page { padding: 20px 16px 48px; }

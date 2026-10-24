@@ -15,7 +15,19 @@
     <label>Username <input name="username" value="{{ username or '' }}" autocomplete="username" required autofocus></label>
     <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
     <button class="button" type="submit">Log in</button>
-    <p class="hint">Demo accounts: <code>owner_ali</code>, <code>staff_mei</code>, <code>auditor_raj</code> (Kedai Runcit Pak Ali) and <code>owner_siti</code> (another shop). The demo password is in the README.</p>
+    {% if demo_password %}
+    <div class="demo-accounts">
+      <p><strong>Demo accounts</strong> (fictional shops), password <code>{{ demo_password }}</code></p>
+      <ul>
+        <li><code>staff_mei</code> staff: upload an invoice, approve small changes</li>
+        <li><code>owner_ali</code> owner: approve the rest, print tags</li>
+        <li><code>auditor_raj</code> auditor: read-only</li>
+        <li><code>owner_siti</code> owner of a second shop</li>
+      </ul>
+    </div>
+    {% else %}
+    <p class="hint">Ask your shop owner for an account.</p>
+    {% endif %}
   </form>
 </section>
 {% endblock %}

@@ -28,6 +28,19 @@ class TestLogin(unittest.TestCase):
         response = self.client.post("/login", data={"username": "owner_ali", "password": "nope", "csrf_token": token})
         self.assertEqual(response.status_code, 401)
         self.assertIn("Wrong username or password", response.text)
+        self.assertIn(PASSWORD, response.text)
+
+    def test_login_page_shows_demo_accounts(self):
+        page = self.client.get("/login")
+        self.assertIn(PASSWORD, page.text)
+        for username in ("owner_ali", "staff_mei", "auditor_raj", "owner_siti"):
+            self.assertIn(username, page.text)
+
+    def test_login_page_hides_password_without_demo_seed(self):
+        client, _ = make_client(self, demo_seed=False)
+        page = client.get("/login")
+        self.assertEqual(page.status_code, 200)
+        self.assertNotIn(PASSWORD, page.text)
 
     def test_login_without_csrf_rejected(self):
         response = self.client.post("/login", data={"username": "owner_ali", "password": PASSWORD})

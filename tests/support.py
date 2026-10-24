@@ -15,12 +15,12 @@ from hargasync.extraction import DisabledExtractor
 PASSWORD = "test-pass-123"
 
 
-def make_client(testcase, extractor=None):
+def make_client(testcase, extractor=None, demo_seed=True):
     tmp = tempfile.mkdtemp(prefix="hargasync-test-")
     testcase.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
     settings = Settings(
         data_dir=Path(tmp), secret_key="test-secret", ai_mode="off", runpod_api_key="", runpod_endpoint_id="",
-        demo_seed=True, demo_password=PASSWORD, https_only=False,
+        demo_seed=demo_seed, demo_password=PASSWORD, https_only=False,
     )
     client = TestClient(create_app(settings, extractor=extractor or DisabledExtractor()))
     testcase.addCleanup(client.close)

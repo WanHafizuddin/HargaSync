@@ -57,11 +57,14 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
 
     app.add_exception_handler(StarletteHTTPException, http_error)
 
+    # The demo password is shown on the login page only while the fictional demo seed is on.
+    demo_context = {"demo_password": settings.demo_password if settings.demo_seed else None}
+
     @app.get("/login")
     def login_page(request: Request):
         if request.session.get("user_id"):
             return redirect("/")
-        return render(request, "login.html")
+        return render(request, "login.html", demo_context)
 
     @app.post("/login")
     def login_submit(
@@ -74,7 +77,7 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
         verify_csrf(request, csrf_token)
         row = conn.execute("SELECT id, password_hash FROM users WHERE username = ?", (username.strip(),)).fetchone()
         if row is None or not verify_password(password, row["password_hash"]):
-            context = {"error": "Wrong username or password.", "username": username}
+            context = {**demo_context, "error": "Wrong username or password.", "username": username}
             return render(request, "login.html", context, status_code=401)
         start_session(request, row["id"])
         return redirect("/")
