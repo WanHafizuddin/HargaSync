@@ -324,11 +324,11 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 
 ## Team
 
-| Name                                  | Role | GitHub                                           |
-| ------------------------------------- | ---- | ------------------------------------------------ |
-| Ahmad Zhafir bin Razali               | Team Leader | [@username](https://github.com/username)         |
-| Nor Syameel Azraie bin Nor Ezlie Azram | Role | [@username](https://github.com/username)         |
-| Wan Hafizuddin bin Wan Harun          | Role | [@WanHafizuddin](https://github.com/WanHafizuddin) |
+| Name                                   | Role                                                        | GitHub                                             |
+| -------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| Ahmad Zhafir bin Razali                | Team Leader: product direction, business case and pitch     | [@ahmad-zhafir](https://github.com/ahmad-zhafir)   |
+| Nor Syameel Azraie bin Nor Ezlie Azram | Research and UX: shop-owner needs, user flow and demo video | —                                                  |
+| Wan Hafizuddin bin Wan Harun           | Lead Developer: web app, AI invoice reading, Replit and RunPod | [@WanHafizuddin](https://github.com/WanHafizuddin) |
 
 ---
 
@@ -337,8 +337,8 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 - [x] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
 - [ ] Slide deck link added
 - [ ] Demo video link added
-- [ ] Replit used, with proof of use in `submission/`
-- [ ] RunPod used, with proof of use in `submission/`
+- [x] Replit used, with proof of use in `submission/`
+- [x] RunPod used, with proof of use in `submission/`
 - [ ] Preliminary submission completed (`SDC2026_SURPrice_Preliminary.pdf`)
 - [ ] Technology declaration completed (`SDC2026_SURPrice_TechDeclaration.pdf`)
 - [x] Submission files renamed with your team name (replace `TeamName`)
