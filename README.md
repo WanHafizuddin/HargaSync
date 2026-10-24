@@ -339,8 +339,8 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 - [x] Demo video link added
 - [x] Replit used, with proof of use in `submission/`
 - [x] RunPod used, with proof of use in `submission/`
-- [ ] Preliminary submission completed (`SDC2026_Umai_Preliminary.pdf`)
-- [ ] Technology declaration completed (`SDC2026_Umai_TechDeclaration.pdf`)
+- [x] Preliminary submission completed (`SDC2026_Umai_Preliminary.pdf`)
+- [x] Technology declaration completed (`SDC2026_Umai_TechDeclaration.pdf`)
 - [x] Submission files renamed with your team name (replace `TeamName`)
 - [x] "How to Run" steps verified
 - [x] No API keys or secrets committed to the repository
