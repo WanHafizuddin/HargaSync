@@ -10,5 +10,6 @@ localPort = 8000
 externalPort = 80
 
 [deployment]
+build = ["pip", "install", "-r", "requirements.txt"]
 run = ["python", "src/main.py"]
 deploymentTarget = "gce"
