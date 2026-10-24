@@ -36,7 +36,7 @@ def create_app(settings: Settings | None = None, extractor=None) -> FastAPI:
     finally:
         conn.close()
 
-    app = FastAPI(title="HargaSync", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="SURPrice", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.settings = settings
     app.state.db_path = db_path
     app.state.extractor = extractor or build_extractor(settings)

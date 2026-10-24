@@ -6,7 +6,7 @@
 
 ---
 
-# HargaSync
+# SURPrice
 
 > From supplier cost to the right shelf price: an AI-assisted pricing and price-tag workflow for Malaysian micro-retailers (kedai runcit and mini-markets).
 
@@ -16,7 +16,7 @@
 
 | Field                  | Details                                     |
 | ---------------------- | ------------------------------------------- |
-| **Team Name**          | Your Team Name                              |
+| **Team Name**          | SURPrice                                    |
 | **Team Domain**        | Domain 2 — Orbyte Smart SME Challenge: Less Busywork, Better Business (Alpha Red Solutions) |
 | **SDG Track (1–17)**   | SDG 8 — Decent Work and Economic Growth (targets 8.2 and 8.3) |
 | **Team Leader**        | Leader Name                                 |
@@ -27,9 +27,9 @@
 
 | Resource          | Link                                           |
 | ----------------- | ---------------------------------------------- |
-| GitHub Repository | https://github.com/WanHafizuddin/HargaSync     |
-| Replit Project    | https://replit.com/@whafiz012/HargaSync        |
-| Live Demo         | https://harga-sync.replit.app (demo logins are shown on the login page) |
+| GitHub Repository | https://github.com/WanHafizuddin/SURPrice      |
+| Replit Project    | https://replit.com/@whafiz012/SURPrice         |
+| Live Demo         | https://surprice.replit.app (demo logins are shown on the login page) |
 | RunPod Endpoint   | https://api.runpod.ai/v2/your-endpoint-id      |
 | Slide Deck        | https://example.com/slides                     |
 | Demo Video        | https://example.com/demo-video                 |
@@ -44,10 +44,10 @@ When a supplier changes a cost, a small shop has to read a messy invoice, find e
 
 ### Solution
 
-HargaSync turns one supplier invoice photo into reviewable price proposals, an authorised catalogue update and a print-ready Bahasa Malaysia shelf-tag sheet.
+SURPrice turns one supplier invoice photo into reviewable price proposals, an authorised catalogue update and a print-ready Bahasa Malaysia shelf-tag sheet.
 
 1. **Capture**: staff photograph the invoice (or type the lines if reading fails).
-2. **Understand**: a vision-language model on RunPod transcribes supplier, items, units, quantities and unit costs into JSON. HargaSync validates that JSON and matches each line to the shop's catalogue, flagging uncertain names and unit mismatches (for example a *karton* of 24 tins).
+2. **Understand**: a vision-language model on RunPod transcribes supplier, items, units, quantities and unit costs into JSON. SURPrice validates that JSON and matches each line to the shop's catalogue, flagging uncertain names and unit mismatches (for example a *karton* of 24 tins).
 3. **Propose**: deterministic rules compute the selling price, `cost ÷ (1 − target margin)` rounded **up** to RM0.10, cap controlled items at the ceiling for the exact item, unit, district, retail level and date, and flag cost jumps over 15% and below-cost results.
 4. **Approve**: staff may approve small non-controlled changes (5% or less, no warnings); everything else goes to the owner. Approval re-checks the rules, the user's role and the catalogue version, then updates the price and writes the audit record in one database transaction.
 5. **Publish**: print A4 sheets of BM shelf tags straight from the approved catalogue, and review the append-only activity log.
@@ -76,7 +76,7 @@ The AI only reads documents. It never decides a legal ceiling, approves a price 
 
 ### The Domain 2 Journey
 
-| Step | In HargaSync |
+| Step | In SURPrice |
 | ---- | ------------ |
 | **Trigger** | A supplier invoice arrives and staff upload its photo. |
 | **Connected data** | The invoice lines are joined with the shop's catalogue (cost, current price, target margin, pack sizes) and the price ceiling for the shop's district, retail level and date. |
@@ -86,7 +86,7 @@ The AI only reads documents. It never decides a legal ceiling, approves a price 
 
 ### Orbyte Fit and Reuse
 
-HargaSync is designed as a **pricing module inside the Orbyte hub**, not a standalone app. It adds a capability Orbyte does not have today, supplier-cost-to-shelf-price pricing with price-control checks, and does not repeat Orbyte's HR or administrative functions.
+SURPrice is designed as a **pricing module inside the Orbyte hub**, not a standalone app. It adds a capability Orbyte does not have today, supplier-cost-to-shelf-price pricing with price-control checks, and does not repeat Orbyte's HR or administrative functions.
 
 - **Shares the hub's foundations.** Users, roles and shops would come from Orbyte. In this MVP they are simulated locally (owner, staff and read-only auditor, with one shop never seeing another's data).
 - **Data in (our interface assumptions, not live Orbyte APIs):** supplier invoices from the hub's procurement inbox or WhatsApp intake, the shop's product catalogue, and the shop's district and retail level.
@@ -110,7 +110,7 @@ HargaSync is designed as a **pricing module inside the Orbyte hub**, not a stand
 - **Time saved:** under 3 minutes from a 15-line invoice to printable tags. The owner no longer reads each line, looks up each item, works out each price and rewrites each label by hand.
 - **Errors avoided:** every price comes from the same rule and rounding, so labels match approved prices (target 98%+); a controlled item with no valid ceiling is blocked instead of guessed.
 - **Less training needed:** each proposal explains itself in plain words, with the formula, the real numbers, the ceiling and who must approve, so new staff can follow it without formal training.
-- **How we will check:** time the same invoice done by hand and in HargaSync with shop owners, and compare printed tags against approved prices.
+- **How we will check:** time the same invoice done by hand and in SURPrice with shop owners, and compare printed tags against approved prices.
 
 **SDG contribution**
 
@@ -187,8 +187,8 @@ Phone / browser ──► Replit: FastAPI app ──► SQLite (catalogue, invoi
 ### Option 2 — Run Locally
 
 ```bash
-git clone https://github.com/WanHafizuddin/HargaSync.git
-cd HargaSync
+git clone https://github.com/WanHafizuddin/SURPrice.git
+cd SURPrice
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -250,7 +250,7 @@ python scripts/benchmark.py
 - **Deployment type:** `.replit` targets a Reserved VM (`gce`): one always-on instance, so SQLite and uploaded photos stay put between requests. Autoscale would scale to zero and lose them. A redeploy still resets the disk; the demo data re-seeds automatically.
 - **Secrets for a deployment:** set `HARGASYNC_SECRET_KEY` (at least 16 characters; placeholders are refused) and `HTTPS_ONLY=1`.
 
-📄 Proof of use: [`submission/SDC2026_TeamName_Replit_POU.pdf`](submission/SDC2026_TeamName_Replit_POU.pdf)
+📄 Proof of use: [`submission/SDC2026_SURPrice_Replit_POU.pdf`](submission/SDC2026_SURPrice_Replit_POU.pdf)
 
 ## How We Use RunPod *(Required)*
 
@@ -270,7 +270,7 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
   -d '{"input": {"image_base64": "<base64 photo>", "mime": "image/png"}}'
 ```
 
-📄 Proof of use: [`submission/SDC2026_TeamName_Runpod_POU.pdf`](submission/SDC2026_TeamName_Runpod_POU.pdf)
+📄 Proof of use: [`submission/SDC2026_SURPrice_Runpod_POU.pdf`](submission/SDC2026_SURPrice_Runpod_POU.pdf)
 
 ---
 
@@ -290,7 +290,7 @@ Targets from the proposal: 98%+ tag accuracy against approved prices, under 3 mi
 
 **In this MVP** every shop, user, product, invoice and price ceiling is synthetic and created by the team. No real personal, customer or company records are used.
 
-**Personal data a real deployment would hold:** shop users' usernames, display names and password hashes, and invoice photos, which may show a supplier's contact name or phone number. HargaSync collects no data about the shop's end customers.
+**Personal data a real deployment would hold:** shop users' usernames, display names and password hashes, and invoice photos, which may show a supplier's contact name or phone number. SURPrice collects no data about the shop's end customers.
 
 How a real deployment would follow the seven principles of Malaysia's Personal Data Protection Act 2010 (PDPA):
 
@@ -331,14 +331,14 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 
 ## Submission Checklist
 
-- [ ] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
+- [x] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
 - [ ] Slide deck link added
 - [ ] Demo video link added
 - [ ] Replit used, with proof of use in `submission/`
 - [ ] RunPod used, with proof of use in `submission/`
-- [ ] Preliminary submission completed (`SDC2026_TeamName_Preliminary.pdf`)
-- [ ] Technology declaration completed (`SDC2026_TeamName_TechDeclaration.pdf`)
-- [ ] Submission files renamed with your team name (replace `TeamName`)
+- [ ] Preliminary submission completed (`SDC2026_SURPrice_Preliminary.pdf`)
+- [ ] Technology declaration completed (`SDC2026_SURPrice_TechDeclaration.pdf`)
+- [x] Submission files renamed with your team name (replace `TeamName`)
 - [ ] "How to Run" steps verified
 - [ ] No API keys or secrets committed to the repository
 

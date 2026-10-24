@@ -1,4 +1,4 @@
-"""Print HargaSync's measured evidence: planted-breach interception and invoice-reading accuracy.
+"""Print SURPrice's measured evidence: planted-breach interception and invoice-reading accuracy.
 
 Run: python scripts/benchmark.py
 Uses AI_MODE / RUNPOD_* from the environment for the reading benchmark (fixture mode is labelled).
@@ -16,7 +16,7 @@ from hargasync.extraction import FIXTURE_PATH, build_extractor  # noqa: E402
 
 
 def main() -> None:
-    print(f"HargaSync benchmark, run {datetime.now():%Y-%m-%d %H:%M}")
+    print(f"SURPrice benchmark, run {datetime.now():%Y-%m-%d %H:%M}")
     breaches = run_breach_benchmark(BREACHES_PATH)
     print(f"\nPlanted rule breaches ({BREACHES_PATH.name}): {breaches['intercepted']}/{breaches['cases']} intercepted"
           f" ({breaches['rate']:.0%})")

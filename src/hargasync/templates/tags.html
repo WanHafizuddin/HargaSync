@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Print tags | HargaSync{% endblock %}
+{% block title %}Print tags | SURPrice{% endblock %}
 {% block content %}
 <div class="page-head">
   <h1>Print shelf tags</h1>
@@ -14,7 +14,7 @@
         <td data-label="Print"><input type="checkbox" name="ids" value="{{ p.id }}" {% if p.id in recent %}checked{% endif %} {% if p.price_sen is none %}disabled{% endif %} aria-label="Print tag for {{ p.name_bm }}"></td>
         <td data-label="Product">{{ p.name_bm }} <span class="muted">per {{ p.unit }}</span></td>
         <td data-label="Shelf price" class="num">{% if p.price_sen %}<span class="price-tag">{{ p.price_sen|rm }}</span>{% else %}<span class="muted">No price yet</span>{% endif %}</td>
-        <td data-label="Last approved">{{ approvals.get(p.id, "")[:10] or "Not through HargaSync yet" }}</td>
+        <td data-label="Last approved">{{ approvals.get(p.id, "")[:10] or "Not through SURPrice yet" }}</td>
       </tr>
     {% endfor %}
     </tbody>
