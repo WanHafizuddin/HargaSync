@@ -31,7 +31,7 @@
 | Replit Project    | https://replit.com/@whafiz012/SURPrice         |
 | Live Demo         | https://surprice.replit.app (demo logins are shown on the login page) |
 | RunPod Endpoint   | https://api.runpod.ai/v2/opdzmifqcyfxio       |
-| Slide Deck        | https://example.com/slides                     |
+| Slide Deck        | https://drive.google.com/file/d/1KO-MTH1CFZKaF9UdWZcCi_PFkYLKhggQ/view?usp=sharing                     |
 | Demo Video        | https://example.com/demo-video                 |
 
 ---
