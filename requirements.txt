@@ -1,4 +1,4 @@
-# Web app dependencies (the RunPod worker has its own runpod/requirements.txt).
+# Web app dependencies (the RunPod worker installs its own in runpod/Dockerfile).
 fastapi==0.161.1
 uvicorn==0.54.0
 jinja2==3.1.6
@@ -6,3 +6,6 @@ python-multipart==0.0.32
 itsdangerous==2.2.0
 httpx==0.28.1
 pillow==13.0.0
+# Indirect dependencies pinned to patched releases (critical advisories affect older versions).
+anyio==4.15.1
+certifi==2026.10.23

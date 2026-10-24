@@ -129,8 +129,7 @@ HargaSync is designed as a **pricing module inside the Orbyte hub**, not a stand
 │   └── invoices/               # Fictional sample invoice photo + expected AI output
 ├── runpod/
 │   ├── handler.py              # RunPod serverless worker: invoice photo -> JSON
-│   ├── Dockerfile              # Worker image
-│   └── requirements.txt
+│   └── Dockerfile              # Worker image and its Python dependencies
 ├── scripts/
 │   ├── benchmark.py            # Prints measured evidence
 │   └── make_sample_invoice.py  # Regenerates the sample invoice photo
