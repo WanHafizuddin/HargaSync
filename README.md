@@ -32,7 +32,7 @@
 | Live Demo         | https://surprice.replit.app (demo logins are shown on the login page) |
 | RunPod Endpoint   | https://api.runpod.ai/v2/opdzmifqcyfxio       |
 | Slide Deck        | https://drive.google.com/file/d/1KO-MTH1CFZKaF9UdWZcCi_PFkYLKhggQ/view?usp=sharing                     |
-| Demo Video        | https://example.com/demo-video                 |
+| Demo Video        | https://youtu.be/W1s42uTuzE0                 |
 
 ---
 
@@ -335,8 +335,8 @@ The PDPA (Amendment) Act 2024 also requires data breach notification and a data 
 ## Submission Checklist
 
 - [x] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
-- [ ] Slide deck link added
-- [ ] Demo video link added
+- [x] Slide deck link added
+- [x] Demo video link added
 - [x] Replit used, with proof of use in `submission/`
 - [x] RunPod used, with proof of use in `submission/`
 - [ ] Preliminary submission completed (`SDC2026_Umai_Preliminary.pdf`)
