@@ -17,11 +17,11 @@
 | Field                  | Details                                     |
 | ---------------------- | ------------------------------------------- |
 | **Team Name**          | Your Team Name                              |
-| **Team Domain**        | Domain 1 / Domain 2 *(choose one)*          |
-| **SDG Track (1–17)**   | SDG 8 — Decent Work and Economic Growth     |
+| **Team Domain**        | Domain 2 — Orbyte Smart SME Challenge: Less Busywork, Better Business (Alpha Red Solutions) |
+| **SDG Track (1–17)**   | SDG 8 — Decent Work and Economic Growth (targets 8.2 and 8.3) |
 | **Team Leader**        | Leader Name                                 |
 | **University**         | University Name(s)                          |
-| **Number of Members**  | e.g. 4                                      |
+| **Number of Members**  | 3                                           |
 
 ## Links
 
@@ -73,6 +73,49 @@ The AI only reads documents. It never decides a legal ceiling, approves a price 
 | Database      | SQLite (standard library), append-only audit triggers             |
 | AI / Compute  | RunPod Serverless GPU running Qwen2.5-VL-7B-Instruct (Transformers) |
 | Hosting / Dev | Replit                                                            |
+
+### The Domain 2 Journey
+
+| Step | In HargaSync |
+| ---- | ------------ |
+| **Trigger** | A supplier invoice arrives and staff upload its photo. |
+| **Connected data** | The invoice lines are joined with the shop's catalogue (cost, current price, target margin, pack sizes) and the price ceiling for the shop's district, retail level and date. |
+| **Decision logic** | AI only reads the photo. Plain rules work out the price, apply the ceiling, raise warnings and decide who must approve. |
+| **Human approval** | Staff approve small, warning-free changes; the owner approves everything else. Approval re-checks role, rules and catalogue version. |
+| **Visible outcome** | The catalogue price changes, a BM shelf-tag sheet is ready to print, and the change is written to the activity log. |
+
+### Orbyte Fit and Reuse
+
+HargaSync is designed as a **pricing module inside the Orbyte hub**, not a standalone app. It adds a capability Orbyte does not have today, supplier-cost-to-shelf-price pricing with price-control checks, and does not repeat Orbyte's HR or administrative functions.
+
+- **Shares the hub's foundations.** Users, roles and shops would come from Orbyte. In this MVP they are simulated locally (owner, staff and read-only auditor, with one shop never seeing another's data).
+- **Data in (our interface assumptions, not live Orbyte APIs):** supplier invoices from the hub's procurement inbox or WhatsApp intake, the shop's product catalogue, and the shop's district and retail level.
+- **Data out:** approved prices back to the hub catalogue and any connected POS or online store, a printable shelf-tag sheet, and approval events into the hub's activity feed.
+- **Built for many SMEs.** Everything is set per shop: district, retail level, per-product target margin, product aliases and pack sizes. The demo already runs two separate shops on one deployment. The same flow suits any small business that buys by the carton and sells by the piece; kedai runcit and mini-markets are the first target.
+- **Reusable building blocks.** The core logic is plain Python with no web code, so other Orbyte modules could reuse it:
+  - `money.py`: sen arithmetic and RM0.10 rounding
+  - `pricing.py`: margin, ceiling, warning and approval-routing rules
+  - `limits.py`: which price ceiling applies for an item, unit, district, retail level and date
+  - `matching.py`: invoice line to catalogue product, with unit and pack-size checks
+  - `extraction.py`: invoice-reader adapter (RunPod, Simulated AI or manual) with strict JSON validation
+
+### Business Benefit
+
+**Measured now**
+
+- 13 of 13 planted rule breaches intercepted (above ceiling, expired, wrong-district or wrong-unit ceiling, cost jump, below cost, large change, new product). See [Evidence](#evidence).
+
+**Expected (team targets, not yet measured with real shops)**
+
+- **Time saved:** under 3 minutes from a 15-line invoice to printable tags. The owner no longer reads each line, looks up each item, works out each price and rewrites each label by hand.
+- **Errors avoided:** every price comes from the same rule and rounding, so labels match approved prices (target 98%+); a controlled item with no valid ceiling is blocked instead of guessed.
+- **Less training needed:** each proposal explains itself in plain words, with the formula, the real numbers, the ceiling and who must approve, so new staff can follow it without formal training.
+- **How we will check:** time the same invoice done by hand and in HargaSync with shop owners, and compare printed tags against approved prices.
+
+**SDG contribution**
+
+- **SDG 8.2:** higher productivity for micro-retailers through simple technology upgrades.
+- **SDG 8.3:** supports micro and small enterprises by protecting their margins and keeping them within price-control rules.
 
 ---
 
@@ -138,8 +181,9 @@ Phone / browser ──► Replit: FastAPI app ──► SQLite (catalogue, invoi
    - `HARGASYNC_SECRET_KEY` (any long random string)
    - `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID` (leave unset to use the labelled Simulated AI)
    - `HTTPS_ONLY=1` for a deployment
-3. Click **Run**. Replit uses `.replit` to start `python src/main.py` on port 8000.
+3. Click **Run**. Replit uses `.replit` to start `python src/main.py` on port 8000. If it reports a missing package, run `pip install -r requirements.txt` in the **Shell** tab and click **Run** again.
 4. Log in with a demo account (below).
+5. To publish: **Deploy → Reserved VM**. The deployment installs `requirements.txt` (the `build` step in `.replit`), then starts the same command. Add the same Secrets to the deployment, with `HTTPS_ONLY=1`.
 
 ### Option 2 — Run Locally
 
@@ -202,7 +246,7 @@ python scripts/benchmark.py
 ## How We Use Replit *(Required)*
 
 - **Development:** the team codes in a shared Repl imported from this repository.
-- **Hosting:** the FastAPI app is deployed with Replit Deployments at the Live Demo link above (`.replit` → `python src/main.py`).
+- **Hosting:** the FastAPI app is deployed with Replit Deployments at the Live Demo link above. `.replit` installs `requirements.txt` as the deployment's build step, then runs `python src/main.py`.
 - **Secrets:** `HARGASYNC_SECRET_KEY` and the RunPod credentials live in Replit Secrets, never in the code.
 - **Deployment type:** `.replit` targets a Reserved VM (`gce`): one always-on instance, so SQLite and uploaded photos stay put between requests. Autoscale would scale to zero and lose them. A redeploy still resets the disk; the demo data re-seeds automatically.
 - **Secrets for a deployment:** set `HARGASYNC_SECRET_KEY` (at least 16 characters; placeholders are refused) and `HTTPS_ONLY=1`.
@@ -243,6 +287,26 @@ Measured with `python scripts/benchmark.py` on 23 October 2026:
 
 Targets from the proposal: 98%+ tag accuracy against approved prices, under 3 minutes from a 15-line invoice to printable tags, 100% of planted breaches intercepted. All ceilings, invoices, shops and people in the demo are fictional.
 
+## Privacy and PDPA
+
+**In this MVP** every shop, user, product, invoice and price ceiling is synthetic and created by the team. No real personal, customer or company records are used.
+
+**Personal data a real deployment would hold:** shop users' usernames, display names and password hashes, and invoice photos, which may show a supplier's contact name or phone number. HargaSync collects no data about the shop's end customers.
+
+How a real deployment would follow the seven principles of Malaysia's Personal Data Protection Act 2010 (PDPA):
+
+| PDPA principle | Already in the MVP | Needed for a real deployment |
+| -------------- | ------------------ | ---------------------------- |
+| **General** (lawful purpose, only what is needed) | Only account details and invoice photos are collected, and only for pricing. | Record the purpose in the shop's agreement with Orbyte. |
+| **Notice and Choice** | — | A plain BM/English notice before first use saying what is collected and why. |
+| **Disclosure** | Invoice photos go only to the team's own RunPod endpoint for reading; prices and the catalogue never leave the app. | List RunPod as a data processor; no sharing for any other purpose. |
+| **Security** | Roles checked on the server, shop isolation, photos served only to signed-in users of that shop with `no-store` caching, PBKDF2-SHA256 password hashes, CSRF protection, Secure cookies over HTTPS, keys kept in Replit Secrets. | Encrypted backups, access reviews, a breach response plan. |
+| **Retention** | — | Delete invoice photos after a set period once their proposals are decided; keep only the activity log needed for audit. |
+| **Data Integrity** | AI output is validated, every line is reviewed by a person, and the activity log is append-only. | Let users correct their own profile details. |
+| **Access** | Every signed-in user can see their own shop's activity log. | A simple request flow for users to see or correct their personal data. |
+
+The PDPA (Amendment) Act 2024 also requires data breach notification and a data protection officer; a production version would plan for both and assess the cross-border transfer when invoice photos are read on a GPU outside Malaysia.
+
 ## Challenges & Learnings
 
 - Keeping AI out of decisions: the model only transcribes; every price comes from rules a person can read.
@@ -258,11 +322,11 @@ Targets from the proposal: 98%+ tag accuracy against approved prices, under 3 mi
 
 ## Team
 
-| Name        | Role                | GitHub                                   |
-| ----------- | ------------------- | ---------------------------------------- |
-| Member Name | Team Lead / Backend | [@username](https://github.com/username) |
-| Member Name | Frontend            | [@username](https://github.com/username) |
-| Member Name | AI / RunPod         | [@username](https://github.com/username) |
+| Name                                  | Role | GitHub                                           |
+| ------------------------------------- | ---- | ------------------------------------------------ |
+| Ahmad Zhafir bin Razali               | Role | [@username](https://github.com/username)         |
+| Nor Syameel Azraie bin Nor Ezlie Azram | Role | [@username](https://github.com/username)         |
+| Wan Hafizuddin bin Wan Harun          | Role | [@WanHafizuddin](https://github.com/WanHafizuddin) |
 
 ---
 
