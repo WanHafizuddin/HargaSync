@@ -1,11 +1,3 @@
-> [!IMPORTANT]
-> ## 📁 Submission Documents & Templates
-> **All required submission templates are in the Google Drive folder below. Download them before you start.**
->
-> ### 👉 [**OPEN THE GOOGLE DRIVE FOLDER**](https://drive.google.com/drive/folders/1xw7c2aN8N-at8hPEULzkcU76e_FFb0Ef) 👈
-
----
-
 # SURPrice
 
 > From supplier cost to the right shelf price: an AI-assisted pricing and price-tag workflow for Malaysian micro-retailers (kedai runcit and mini-markets).
