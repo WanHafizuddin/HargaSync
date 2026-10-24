@@ -28,8 +28,8 @@
 | Resource          | Link                                           |
 | ----------------- | ---------------------------------------------- |
 | GitHub Repository | https://github.com/WanHafizuddin/HargaSync     |
-| Replit Project    | https://replit.com/@your-username/your-project |
-| Live Demo         | https://your-project.replit.app                |
+| Replit Project    | https://replit.com/@whafiz012/HargaSync        |
+| Live Demo         | https://harga-sync.replit.app (demo logins are shown on the login page) |
 | RunPod Endpoint   | https://api.runpod.ai/v2/your-endpoint-id      |
 | Slide Deck        | https://example.com/slides                     |
 | Demo Video        | https://example.com/demo-video                 |
